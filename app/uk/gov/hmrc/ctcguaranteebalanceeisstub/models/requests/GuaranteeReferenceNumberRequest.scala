@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses
+package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.Format
-import play.api.libs.json.__
+import play.api.libs.json.Json
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 
-case class AccessCodeResponse(guaranteeReferenceNumber: GuaranteeReferenceNumber, accessCode: AccessCode)
+case class GuaranteeReferenceNumberRequest(GRN: GuaranteeReferenceNumber)
 
-object AccessCodeResponse {
-
-  implicit val format: Format[AccessCodeResponse] =
-    ((__ \ "GRN").format[GuaranteeReferenceNumber] and (__ \ "accessCode")
-      .format[AccessCode])(AccessCodeResponse.apply(_, _), response => (response.guaranteeReferenceNumber, response.accessCode))
+object GuaranteeReferenceNumberRequest {
+  implicit val format = Json.format[GuaranteeReferenceNumberRequest]
 }
