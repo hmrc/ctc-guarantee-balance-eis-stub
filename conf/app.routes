@@ -1,3 +1,4 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.MicroserviceHelloWorldController.hello
+POST        /guarantee/accessCode             uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.GuaranteeController.getAccessCode()
+POST        /guarantee/balance             uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.GuaranteeController.getBalance()
