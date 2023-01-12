@@ -21,25 +21,24 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.Balance
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
 trait Generators {
 
-  val balanceResponse: BalanceResponse = (for {
-    grn <- guaranteeReferenceNumberGenerator()
-  } yield BalanceResponse(grn, Balance.constantBalanceValue)).sample.get
+  val balanceResponseGenerator: Gen[BalanceResponse] = for {
+    grn <- guaranteeReferenceNumberGenerator
+  } yield BalanceResponse(grn, BalanceResponse.constantBalanceValue)
 
-  val accessCodeResponse: AccessCodeResponse = (for {
-    grn <- guaranteeReferenceNumberGenerator()
-  } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)).sample.get
+  val accessCodeResponseGenerator: Gen[AccessCodeResponse] = for {
+    grn <- guaranteeReferenceNumberGenerator
+  } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)
 
-  val guaranteeReferenceNumberRequest: GuaranteeReferenceNumberRequest =
-    (for {
-      grn <- guaranteeReferenceNumberGenerator()
-    } yield GuaranteeReferenceNumberRequest(grn)).sample.get
+  val guaranteeReferenceNumberRequestGenerator: Gen[GuaranteeReferenceNumberRequest] =
+    for {
+      grn <- guaranteeReferenceNumberGenerator
+    } yield GuaranteeReferenceNumberRequest(grn)
 
-  def guaranteeReferenceNumberGenerator(): Gen[GuaranteeReferenceNumber] =
+  def guaranteeReferenceNumberGenerator: Gen[GuaranteeReferenceNumber] =
     for {
       year     <- Gen.choose(23, 39).map(_.toString)
       country  <- Gen.oneOf("GB", "XI")

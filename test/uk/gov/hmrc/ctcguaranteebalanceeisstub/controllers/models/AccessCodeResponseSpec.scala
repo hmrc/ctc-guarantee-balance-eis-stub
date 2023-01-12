@@ -24,15 +24,17 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeRespons
 
 class AccessCodeResponseSpec extends AnyFreeSpec with Matchers with Generators {
 
-  val expectedJson = Json.obj("GRN" -> accessCodeResponse.guaranteeReferenceNumber.value, "accessCode" -> accessCodeResponse.accessCode.value)
+  for (accessCodeResponse <- accessCodeResponseGenerator.sample) {
+    val expectedJson = Json.obj("GRN" -> accessCodeResponse.guaranteeReferenceNumber.value, "accessCode" -> accessCodeResponse.accessCode.value)
 
-  "AccessCodeResponse should serialize as expected" in {
-    expectedJson.validate[AccessCodeResponse].get shouldBe accessCodeResponse
-  }
+    "AccessCodeResponse should serialize as expected" in {
+      expectedJson.validate[AccessCodeResponse].get shouldBe accessCodeResponse
+    }
 
-  "AccessCodeResponse should deserialize as expected" in {
-    Json
-      .toJson(accessCodeResponse) shouldBe expectedJson
+    "AccessCodeResponse should deserialize as expected" in {
+      Json
+        .toJson(accessCodeResponse) shouldBe expectedJson
+    }
   }
 
 }

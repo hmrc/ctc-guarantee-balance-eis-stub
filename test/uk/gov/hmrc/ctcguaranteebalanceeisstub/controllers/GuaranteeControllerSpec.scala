@@ -30,7 +30,6 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.Balance
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
 class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Matchers with Generators {
@@ -50,7 +49,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
   "POST /guarantee/accessCode" - {
     "when the GRN format is valid, should return 200 with GRN and accessCode" in {
-      val validGrnRequest = guaranteeReferenceNumberRequest
+      val validGrnRequest = guaranteeReferenceNumberRequestGenerator.sample.get
 
       val request = fakeRequest(Json.toJson(validGrnRequest).toString(), routes.GuaranteeController.getAccessCode().url)
 
@@ -85,7 +84,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
   "POST /guarantee/balance" - {
     "when the GRN format is valid, should return 200 with GRN and remainingBalance" in {
-      val validGrnRequest = guaranteeReferenceNumberRequest
+      val validGrnRequest = guaranteeReferenceNumberRequestGenerator.sample.get
 
       val request = fakeRequest(Json.toJson(validGrnRequest).toString(), routes.GuaranteeController.getBalance().url)
 
@@ -95,7 +94,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       contentAsJson(result).validate[BalanceResponse].map {
         response =>
           response.guaranteeReferenceNumber.value shouldBe validGrnRequest.GRN.value
-          response.remainingBalance shouldBe Balance.constantBalanceValue
+          response.remainingBalance shouldBe BalanceResponse.constantBalanceValue
       }
     }
 

@@ -24,7 +24,8 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReference
 
 class GuaranteeReferenceNumberRequestSpec extends AnyFreeSpec with Matchers with Generators {
 
-  for (grn <- guaranteeReferenceNumberGenerator().sample) {
+  for (grn <- guaranteeReferenceNumberGenerator.sample) {
+
     val expectedJson = Json.obj("GRN" -> grn.value)
 
     "GuaranteeReferenceNumberRequest should serialize as expected" in {
