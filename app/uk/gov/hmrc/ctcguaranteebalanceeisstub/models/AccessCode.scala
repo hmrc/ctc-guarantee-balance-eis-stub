@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ctcguaranteebalanceeisstub.config
+package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
-import com.google.inject.AbstractModule
+import play.api.libs.json.Json
 
-class Module extends AbstractModule {
+case class AccessCode(value: String) extends AnyVal
 
-  override def configure(): Unit =
-    bind(classOf[AppConfig]).asEagerSingleton()
+object AccessCode {
+  implicit val accessCodeFormat = Json.valueFormat[AccessCode]
 
+  val constantAccessCodeValue = AccessCode("AB12")
 }

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ctcguaranteebalanceeisstub.config
+package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests
 
-import com.google.inject.AbstractModule
+import play.api.libs.json.Json
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 
-class Module extends AbstractModule {
+case class GuaranteeReferenceNumberRequest(GRN: GuaranteeReferenceNumber)
 
-  override def configure(): Unit =
-    bind(classOf[AppConfig]).asEagerSingleton()
-
+object GuaranteeReferenceNumberRequest {
+  implicit val format = Json.format[GuaranteeReferenceNumberRequest]
 }
