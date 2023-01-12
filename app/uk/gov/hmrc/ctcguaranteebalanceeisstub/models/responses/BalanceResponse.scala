@@ -28,11 +28,11 @@ case class Balance(value: Double) extends AnyVal
 
 object Balance {
   implicit val balanceFormat = Json.valueFormat[Balance]
+
+  val constantBalanceValue = Balance(1234.56)
 }
 
 object BalanceResponse {
-
-  val constantBalanceValue = Balance(1234.56)
 
   implicit val format: Format[BalanceResponse] =
     ((__ \ "GRN").format[GuaranteeReferenceNumber] and (__ \ "remainingBalance")

@@ -21,22 +21,23 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.Balance
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
 trait Generators {
 
-  def balanceResponseGenerator(): Gen[BalanceResponse] = for {
+  val balanceResponse: BalanceResponse = (for {
     grn <- guaranteeReferenceNumberGenerator()
-  } yield BalanceResponse(grn, BalanceResponse.constantBalanceValue)
+  } yield BalanceResponse(grn, Balance.constantBalanceValue)).sample.get
 
-  def accessCodeResponseGenerator(): Gen[AccessCodeResponse] = for {
+  val accessCodeResponse: AccessCodeResponse = (for {
     grn <- guaranteeReferenceNumberGenerator()
-  } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)
+  } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)).sample.get
 
-  def guaranteeReferenceNumberRequestGenerator(): Gen[GuaranteeReferenceNumberRequest] =
-    for {
+  val guaranteeReferenceNumberRequest: GuaranteeReferenceNumberRequest =
+    (for {
       grn <- guaranteeReferenceNumberGenerator()
-    } yield GuaranteeReferenceNumberRequest(grn)
+    } yield GuaranteeReferenceNumberRequest(grn)).sample.get
 
   def guaranteeReferenceNumberGenerator(): Gen[GuaranteeReferenceNumber] =
     for {

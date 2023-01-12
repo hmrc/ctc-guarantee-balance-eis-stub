@@ -27,6 +27,7 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.Balance
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
 import javax.inject.Inject
@@ -51,7 +52,7 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
     implicit request =>
       Future {
         validateGRN(request.body) match {
-          case Right(grn)        => Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
+          case Right(grn)        => Ok(Json.toJson(BalanceResponse(grn, Balance.constantBalanceValue)))
           case Left(errorResult) => errorResult
         }
       }
