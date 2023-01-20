@@ -72,6 +72,14 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       contentAsJson(result) shouldBe Json.toJson(s"The guarantee reference number [${invalidGRN.value}] is not in the correct format.")
     }
 
+    "when GRN starts with 1, should return 404" in {
+      val invalidGRN = GuaranteeReferenceNumber("13XINS1DZBLXRXGB1N280244")
+      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
+      val result     = route(app, request).get
+
+      status(result) shouldBe Status.NOT_FOUND
+    }
+
     "when GRN is not present in the body, should return 400" in {
       val invalidBody = Json.obj("test" -> "invalid_body")
       val request     = fakeRequest(invalidBody, routes.GuaranteeController.getAccessCode().url)
@@ -105,6 +113,14 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       contentAsJson(result) shouldBe Json.toJson(s"The guarantee reference number [${invalidGRN.value}] is not in the correct format.")
+    }
+
+    "when GRN starts with 1, should return 404" in {
+      val invalidGRN = GuaranteeReferenceNumber("12GBNS1DZBLXRXGB1N280244")
+      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
+      val result     = route(app, request).get
+
+      status(result) shouldBe Status.NOT_FOUND
     }
 
     "when GRN is not present in the body, should return 400" in {
