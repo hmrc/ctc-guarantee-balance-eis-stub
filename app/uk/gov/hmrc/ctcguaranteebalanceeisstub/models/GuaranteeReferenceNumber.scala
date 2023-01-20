@@ -24,6 +24,10 @@ case class GuaranteeReferenceNumber(value: String) extends AnyVal {
     case GuaranteeReferenceNumber.grnPattern(_) => true
     case _                                      => false
   }
+
+  def isNotFound(): Boolean =
+    if (value.startsWith("1")) true // we consider all GRNs starting with "1" as not found in the DB.
+    else false
 }
 
 object GuaranteeReferenceNumber {

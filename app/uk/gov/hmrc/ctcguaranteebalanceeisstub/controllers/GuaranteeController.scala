@@ -62,9 +62,10 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
       .validate[GuaranteeReferenceNumberRequest]
       .map {
         request =>
-          request.GRN.hasValidFormat() match {
-            case true  => Right(request.GRN)
-            case false => Left(InternalServerError(JsString(s"The guarantee reference number [${request.GRN.value}] is not in the correct format.")))
+          (request.GRN.hasValidFormat(), request.GRN.isNotFound()) match {
+            case (true, false) => Right(request.GRN)
+            case (true, true)  => Left(NotFound)
+            case (_, _)        => Left(InternalServerError(JsString(s"The guarantee reference number [${request.GRN.value}] is not in the correct format.")))
           }
       }
       .getOrElse(
