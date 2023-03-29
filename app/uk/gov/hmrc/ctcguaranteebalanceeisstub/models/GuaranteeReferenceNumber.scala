@@ -20,7 +20,7 @@ import play.api.libs.json._
 
 case class GuaranteeReferenceNumber(value: String) extends AnyVal {
 
-  // we consider all GRNs starting with "1" as not found in the DB.
+  // we consider all GRNs starting with "1" as not found in the DB
   def isValid: Boolean = value match {
     case GuaranteeReferenceNumber.grnPattern(_) => !value.startsWith("1")
     case _                                      => false

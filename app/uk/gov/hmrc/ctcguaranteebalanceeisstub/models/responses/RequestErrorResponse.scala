@@ -21,10 +21,10 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 
 import java.time.OffsetDateTime
 
-case class RequestError(message: String, timestamp: OffsetDateTime, path: String)
+case class RequestErrorResponse(message: String, timestamp: OffsetDateTime, path: String)
 
-object RequestError {
-  implicit val format                                = Json.format[RequestError]
-  def invalidAccessCode                              = RequestError("Not Valid Access Code for this operation", OffsetDateTime.now(), "...")
-  def invalidGrnError(grn: GuaranteeReferenceNumber) = RequestError(s"Guarantee not found for GRN: ${grn.value}", OffsetDateTime.now(), "...")
+object RequestErrorResponse {
+  implicit val format                                = Json.format[RequestErrorResponse]
+  def invalidAccessCode                              = RequestErrorResponse("Not Valid Access Code for this operation", OffsetDateTime.now(), "...")
+  def invalidGrnError(grn: GuaranteeReferenceNumber) = RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", OffsetDateTime.now(), "...")
 }

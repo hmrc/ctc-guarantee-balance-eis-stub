@@ -26,7 +26,7 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestError
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,8 +44,8 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
           .map {
             accessCodeRequest =>
               (grn.isValid, accessCodeRequest.isValidAccessCode) match {
-                case (false, _) => InternalServerError(Json.toJson(RequestError.invalidGrnError(grn)))
-                case (_, false) => InternalServerError(Json.toJson(RequestError.invalidAccessCode))
+                case (false, _) => InternalServerError(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
+                case (_, false) => InternalServerError(Json.toJson(RequestErrorResponse.invalidAccessCode))
                 case _          => Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
               }
           }
@@ -55,8 +55,10 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
       }
   }
 
-  def getBalance(grn: GuaranteeReferenceNumber): Action[JsValue] = Action.async(parse.json) {
+  def getBalance(grn: GuaranteeReferenceNumber) = Action {
     implicit request =>
-      Future.successful(Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue))))
+      if (grn.isValid)
+        Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
+      else InternalServerError
   }
 }

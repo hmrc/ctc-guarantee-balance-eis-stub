@@ -17,7 +17,6 @@
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 
 import org.scalacheck.Gen
-import org.scalacheck.Prop.forAll
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -32,10 +31,12 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
+import play.api.mvc.AnyContentAsEmpty
 
 class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Matchers with Generators {
 
-  def fakeRequest[A](body: A, url: String) = FakeRequest(
+  def fakeAccessCodeRequest[A](body: A, url: String) = FakeRequest(
     method = "POST",
     uri = url,
     headers = FakeHeaders(
@@ -48,90 +49,81 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
   override lazy val app = GuiceApplicationBuilder().build()
 
-  "POST /guarantee/accessCode" - {
-    "when the GRN format is valid, should return 200 with GRN and accessCode" in forAll(guaranteeReferenceNumberGenerator) {
-      grn =>
-        val accessCodeRequest: AccessCodeRequest = AccessCodeRequest(AccessCode.constantAccessCodeValue)
+  val validGRN   = guaranteeReferenceNumberGenerator.sample.get
+  val invalidGRN = GuaranteeReferenceNumber(Gen.stringOfN(10, Gen.alphaNumChar).sample.get)
 
-        val request = fakeRequest(Json.toJson(grn.value), routes.GuaranteeController.validateAccessCode(grn).url)
+  "POST /guarantees/:grn/access-codes" - {
+    val validAccessCodeRequest: AccessCodeRequest = AccessCodeRequest(AccessCode.constantAccessCodeValue)
 
-        val result = route(app, request).get
-
-        status(result) shouldBe Status.OK
-        contentAsJson(result).validate[AccessCodeResponse].map {
-          response =>
-            response.grn.value shouldBe grn.value
-            response.masterAccessCode shouldBe AccessCode.constantAccessCodeValue
-        }
-    }
-
-    "when the GRN format is invalid, should return 500" in {
-      val invalidGRN = GuaranteeReferenceNumber(Gen.stringOfN(10, Gen.alphaNumChar).sample.get)
-      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getAccessCode().url)
-      val result     = route(app, request).get
-
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldBe Json.toJson(s"The guarantee reference number [${invalidGRN.value}] is not in the correct format.")
-    }
-
-    "when GRN starts with 1, should return 404" in {
-      val invalidGRN = GuaranteeReferenceNumber("13XINS1DZBLXRXGB1N280244")
-      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
-      val result     = route(app, request).get
-
-      status(result) shouldBe Status.NOT_FOUND
-    }
-
-    "when GRN is not present in the body, should return 400" in {
-      val invalidBody = Json.obj("test" -> "invalid_body")
-      val request     = fakeRequest(invalidBody, routes.GuaranteeController.getAccessCode().url)
-      val result      = route(app, request).get
-
-      status(result) shouldBe Status.BAD_REQUEST
-      contentAsJson(result) shouldBe Json.toJson("Expected GRN in the body.")
-    }
-  }
-
-  "POST /guarantee/balance" - {
-    "when the GRN format is valid, should return 200 with GRN and remainingBalance" in {
-      val validGrnRequest = guaranteeReferenceNumberRequestGenerator.sample.get
-
-      val request = fakeRequest(Json.toJson(validGrnRequest).toString(), routes.GuaranteeController.getBalance().url)
+    "when the GRN format is valid, should return 200 with GRN and accessCode" in {
+      val request = fakeAccessCodeRequest(Json.toJson(validAccessCodeRequest), routes.GuaranteeController.validateAccessCode(validGRN).url)
 
       val result = route(app, request).get
 
       status(result) shouldBe Status.OK
+      contentAsJson(result).validate[AccessCodeResponse].map {
+        response =>
+          response.grn.value shouldBe validGRN.value
+          response.masterAccessCode shouldBe AccessCode.constantAccessCodeValue
+      }
+    }
+
+    "when the GRN is invalid, should return 500 with appropriate error message" in {
+      val request = fakeAccessCodeRequest(Json.toJson(validAccessCodeRequest), routes.GuaranteeController.validateAccessCode(invalidGRN).url)
+      val result  = route(app, request).get
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      contentAsJson(result).validate[RequestErrorResponse].map {
+        errorResponse =>
+          errorResponse.message shouldBe s"Guarantee not found for GRN: ${invalidGRN.value}"
+          errorResponse.path shouldBe "..."
+      }
+    }
+
+    "when the access code is invalid, should return 500 with appropriate error message" in {
+      val invalidAccessCode: AccessCodeRequest = AccessCodeRequest(AccessCode("invalid"))
+      val request                              = fakeAccessCodeRequest(Json.toJson(invalidAccessCode), routes.GuaranteeController.validateAccessCode(validGRN).url)
+      val result                               = route(app, request).get
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      contentAsJson(result).validate[RequestErrorResponse].map {
+        errorResponse =>
+          errorResponse.message shouldBe "Not Valid Access Code for this operation"
+          errorResponse.path shouldBe "..."
+      }
+    }
+  }
+
+  def fakeBalanceRequest(grn: GuaranteeReferenceNumber) = FakeRequest(
+    method = "GET",
+    uri = routes.GuaranteeController.getBalance(grn).url,
+    headers = FakeHeaders(
+      Seq(
+        "Accept" -> "application/json"
+      )
+    ),
+    body = AnyContentAsEmpty
+  )
+
+  "GET /guarantees/:grn/balance" - {
+    "when the GRN format is valid, should return 200 with GRN and remainingBalance" in {
+      val request = fakeBalanceRequest(validGRN)
+      val result  = route(app, request).get
+
+      status(result) shouldBe Status.OK
       contentAsJson(result).validate[BalanceResponse].map {
         response =>
-          response.guaranteeReferenceNumber.value shouldBe validGrnRequest.GRN.value
-          response.remainingBalance shouldBe BalanceResponse.constantBalanceValue
+          response.grn.value shouldBe validGRN.value
+          response.currencyCL shouldBe "GBP"
       }
     }
 
     "when the GRN format is invalid, should return 500" in {
-      val invalidGRN = GuaranteeReferenceNumber(Gen.stringOfN(10, Gen.alphaNumChar).sample.get)
-      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
-      val result     = route(app, request).get
+      val request = fakeBalanceRequest(invalidGRN)
+      val result  = route(app, request).get
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldBe Json.toJson(s"The guarantee reference number [${invalidGRN.value}] is not in the correct format.")
     }
 
-    "when GRN starts with 1, should return 404" in {
-      val invalidGRN = GuaranteeReferenceNumber("12GBNS1DZBLXRXGB1N280244")
-      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
-      val result     = route(app, request).get
-
-      status(result) shouldBe Status.NOT_FOUND
-    }
-
-    "when GRN is not present in the body, should return 400" in {
-      val invalidBody = Json.obj("test" -> "invalid_body")
-      val request     = fakeRequest(invalidBody, routes.GuaranteeController.getBalance().url)
-      val result      = route(app, request).get
-
-      status(result) shouldBe Status.BAD_REQUEST
-      contentAsJson(result) shouldBe Json.toJson("Expected GRN in the body.")
-    }
   }
 }
