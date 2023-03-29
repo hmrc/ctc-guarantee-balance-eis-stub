@@ -17,6 +17,7 @@
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 
 import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -28,7 +29,7 @@ import play.api.test.FakeHeaders
 import play.api.test.FakeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
@@ -48,24 +49,25 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
   override lazy val app = GuiceApplicationBuilder().build()
 
   "POST /guarantee/accessCode" - {
-    "when the GRN format is valid, should return 200 with GRN and accessCode" in {
-      val validGrnRequest = guaranteeReferenceNumberRequestGenerator.sample.get
+    "when the GRN format is valid, should return 200 with GRN and accessCode" in forAll(guaranteeReferenceNumberGenerator) {
+      grn =>
+        val accessCodeRequest: AccessCodeRequest = AccessCodeRequest(AccessCode.constantAccessCodeValue)
 
-      val request = fakeRequest(Json.toJson(validGrnRequest).toString(), routes.GuaranteeController.getAccessCode().url)
+        val request = fakeRequest(Json.toJson(grn.value), routes.GuaranteeController.validateAccessCode(grn).url)
 
-      val result = route(app, request).get
+        val result = route(app, request).get
 
-      status(result) shouldBe Status.OK
-      contentAsJson(result).validate[AccessCodeResponse].map {
-        response =>
-          response.guaranteeReferenceNumber.value shouldBe validGrnRequest.GRN.value
-          response.accessCode.value shouldBe AccessCode.constantAccessCodeValue.value
-      }
+        status(result) shouldBe Status.OK
+        contentAsJson(result).validate[AccessCodeResponse].map {
+          response =>
+            response.grn.value shouldBe grn.value
+            response.masterAccessCode shouldBe AccessCode.constantAccessCodeValue
+        }
     }
 
     "when the GRN format is invalid, should return 500" in {
       val invalidGRN = GuaranteeReferenceNumber(Gen.stringOfN(10, Gen.alphaNumChar).sample.get)
-      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getAccessCode().url)
+      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getAccessCode().url)
       val result     = route(app, request).get
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
@@ -74,7 +76,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
     "when GRN starts with 1, should return 404" in {
       val invalidGRN = GuaranteeReferenceNumber("13XINS1DZBLXRXGB1N280244")
-      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
+      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
       val result     = route(app, request).get
 
       status(result) shouldBe Status.NOT_FOUND
@@ -108,7 +110,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
     "when the GRN format is invalid, should return 500" in {
       val invalidGRN = GuaranteeReferenceNumber(Gen.stringOfN(10, Gen.alphaNumChar).sample.get)
-      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
+      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
       val result     = route(app, request).get
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
@@ -117,7 +119,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
     "when GRN starts with 1, should return 404" in {
       val invalidGRN = GuaranteeReferenceNumber("12GBNS1DZBLXRXGB1N280244")
-      val request    = fakeRequest(Json.toJson(GuaranteeReferenceNumberRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
+      val request    = fakeRequest(Json.toJson(AccessCodeRequest(invalidGRN)).toString(), routes.GuaranteeController.getBalance().url)
       val result     = route(app, request).get
 
       status(result) shouldBe Status.NOT_FOUND

@@ -20,7 +20,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.Generators
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 
 class GuaranteeReferenceNumberRequestSpec extends AnyFreeSpec with Matchers with Generators {
 
@@ -29,11 +29,11 @@ class GuaranteeReferenceNumberRequestSpec extends AnyFreeSpec with Matchers with
     val expectedJson = Json.obj("GRN" -> grn.value)
 
     "GuaranteeReferenceNumberRequest should serialize as expected" in {
-      expectedJson.validate[GuaranteeReferenceNumberRequest].get.GRN shouldBe grn
+      expectedJson.validate[AccessCodeRequest].get.GRN shouldBe grn
     }
 
     "GuaranteeReferenceNumberRequest should deserialize as expected" in {
-      Json.toJson(GuaranteeReferenceNumberRequest(grn)) shouldBe expectedJson
+      Json.toJson(AccessCodeRequest(grn)) shouldBe expectedJson
     }
   }
 

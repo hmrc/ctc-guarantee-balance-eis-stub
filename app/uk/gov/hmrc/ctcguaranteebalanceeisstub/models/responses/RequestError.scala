@@ -16,21 +16,15 @@
 
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses
 
-import play.api.libs.json.Format
 import play.api.libs.json.Json
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 
-case class BalanceResponse(grn: GuaranteeReferenceNumber, balance: Balance, currencyCL: String = "GBP")
+import java.time.OffsetDateTime
 
-case class Balance(value: Double) extends AnyVal
+case class RequestError(message: String, timestamp: OffsetDateTime, path: String)
 
-object Balance {
-  implicit val balanceFormat = Json.valueFormat[Balance]
-}
-
-object BalanceResponse {
-
-  val constantBalanceValue = Balance(1234.56)
-
-  implicit val format: Format[BalanceResponse] = Json.format[BalanceResponse]
+object RequestError {
+  implicit val format                                = Json.format[RequestError]
+  def invalidAccessCode                              = RequestError("Not Valid Access Code for this operation", OffsetDateTime.now(), "...")
+  def invalidGrnError(grn: GuaranteeReferenceNumber) = RequestError(s"Guarantee not found for GRN: ${grn.value}", OffsetDateTime.now(), "...")
 }

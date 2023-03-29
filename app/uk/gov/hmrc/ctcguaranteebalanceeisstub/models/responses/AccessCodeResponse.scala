@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.Format
-import play.api.libs.json.__
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
+import play.api.libs.json.Json
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 
-case class AccessCodeResponse(guaranteeReferenceNumber: GuaranteeReferenceNumber, accessCode: AccessCode)
+case class AccessCodeResponse(
+  grn: GuaranteeReferenceNumber,
+  masterAccessCode: AccessCode,
+  additionalAccessCodes: List[AccessCode] = List(AccessCode("AA12"), AccessCode("AA13"))
+)
 
 object AccessCodeResponse {
-
-  implicit val format: Format[AccessCodeResponse] =
-    ((__ \ "GRN").format[GuaranteeReferenceNumber] and (__ \ "accessCode")
-      .format[AccessCode])(AccessCodeResponse.apply(_, _), response => (response.guaranteeReferenceNumber, response.accessCode))
+  implicit val format: Format[AccessCodeResponse] = Json.format[AccessCodeResponse]
 }

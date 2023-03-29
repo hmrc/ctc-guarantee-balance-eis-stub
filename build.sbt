@@ -1,12 +1,11 @@
 import sbt.Defaults.itSettings
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import play.sbt.routes.RoutesKeys
 
 lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(SbtDistributablesPlugin.publishingSettings)
   .settings(inConfig(IntegrationTest)(itSettings))
   .settings(inThisBuild(buildSettings))
   .settings(
@@ -16,9 +15,12 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    // Import models by default in route files
+    RoutesKeys.routesImport ++= Seq(
+      "models.GuaranteeReferenceNumber"
+    )
   )
-  .settings(publishingSettings: _*)
   .settings(scalacSettings)
   .settings(scoverageSettings)
   .configs(IntegrationTest)
