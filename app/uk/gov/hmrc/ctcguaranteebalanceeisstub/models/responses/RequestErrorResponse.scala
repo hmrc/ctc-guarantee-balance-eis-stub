@@ -23,22 +23,22 @@ import play.api.libs.json.OWrites
 import play.api.libs.json.Reads
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 
-import java.time.OffsetDateTime
-
-case class RequestErrorResponse(message: String, timestamp: OffsetDateTime, path: String)
+case class RequestErrorResponse(message: String, timestamp: String, path: String)
 
 object RequestErrorResponse {
 
   implicit val reads: Reads[RequestErrorResponse] =
     ((JsPath \ "message").read[String] and
-      (JsPath \ "timestamp").read[OffsetDateTime] and
+      (JsPath \ "timestamp").read[String] and
       (JsPath \ "path").read[String])(RequestErrorResponse.apply _)
 
   implicit val writes: OWrites[RequestErrorResponse] =
     ((JsPath \ "message").write[String] and
-      (JsPath \ "timestamp").write[OffsetDateTime] and
+      (JsPath \ "timestamp").write[String] and
       (JsPath \ "path").write[String])(unlift(RequestErrorResponse.unapply))
 
-  def invalidAccessCode                              = RequestErrorResponse("Not Valid Access Code for this operation", OffsetDateTime.now(), "...")
-  def invalidGrnError(grn: GuaranteeReferenceNumber) = RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", OffsetDateTime.now(), "...")
+  def invalidAccessCode = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
+
+  def invalidGrnError(grn: GuaranteeReferenceNumber) =
+    RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", "2023-01-24T11:57:36.0537863801", "...")
 }
