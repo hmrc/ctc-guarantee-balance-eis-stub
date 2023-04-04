@@ -80,6 +80,13 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       }
     }
 
+    "when the request cannot be deserialised, should return 500 " in {
+      val request = fakeAccessCodeRequest(Json.toJson("invalid request body"), routes.GuaranteeController.validateAccessCode(invalidGRN).url)
+      val result  = route(app, request).get
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
     "when the access code is invalid, should return 500 with appropriate error message" in {
       val invalidAccessCode: AccessCodeRequest = AccessCodeRequest(AccessCode("invalid"))
       val request                              = fakeAccessCodeRequest(Json.toJson(invalidAccessCode), routes.GuaranteeController.validateAccessCode(validGRN).url)
