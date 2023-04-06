@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 
 case class AccessCodeRequest(masterAccessCode: AccessCode) {
-  val isValidAccessCode = masterAccessCode == AccessCode.constantAccessCodeValue
+  val isValidAccessCode = masterAccessCode.value == AccessCode.constantAccessCodeValue.value
 }
 
 object AccessCodeRequest {

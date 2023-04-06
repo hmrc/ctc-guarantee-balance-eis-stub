@@ -1,4 +1,4 @@
 # microservice specific routes
 
-POST        /guarantees/:grn/access-codes       uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.GuaranteeController.validateAccessCode(grn: GuaranteeReferenceNumber)
+POST       /guarantees/:grn/access-codes       uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.GuaranteeController.validateAccessCode(grn: GuaranteeReferenceNumber)
 GET        /guarantees/:grn/balance            uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers.GuaranteeController.getBalance(grn: GuaranteeReferenceNumber)
