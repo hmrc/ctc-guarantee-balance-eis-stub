@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 
-import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
-import play.api.mvc.Result
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,38 +36,29 @@ import scala.concurrent.Future
 @Singleton()
 class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def getAccessCode(): Action[JsValue] = Action.async(parse.json) {
+  def validateAccessCode(grn: GuaranteeReferenceNumber): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       Future {
-        validateGRN(request.body) match {
-          case Right(grn)        => Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
-          case Left(errorResult) => errorResult
-        }
-      }
-  }
-
-  def getBalance(): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      Future {
-        validateGRN(request.body) match {
-          case Right(grn)        => Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
-          case Left(errorResult) => errorResult
-        }
-      }
-  }
-
-  private def validateGRN(body: JsValue): Either[Result, GuaranteeReferenceNumber] =
-    body
-      .validate[GuaranteeReferenceNumberRequest]
-      .map {
-        request =>
-          (request.GRN.hasValidFormat(), request.GRN.isNotFound) match {
-            case (true, false) => Right(request.GRN)
-            case (true, true)  => Left(NotFound)
-            case (_, _)        => Left(InternalServerError(JsString(s"The guarantee reference number [${request.GRN.value}] is not in the correct format.")))
+        request.body
+          .validate[AccessCodeRequest]
+          .map {
+            accessCodeRequest =>
+              (grn.isValid, accessCodeRequest.isValidAccessCode) match {
+                case (false, _) => InternalServerError(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
+                case (_, false) => InternalServerError(Json.toJson(RequestErrorResponse.invalidAccessCode))
+                case _          => Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
+              }
           }
+          .getOrElse(
+            InternalServerError
+          )
       }
-      .getOrElse(
-        Left(BadRequest(JsString("Expected GRN in the body.")))
-      )
+  }
+
+  def getBalance(grn: GuaranteeReferenceNumber) = Action {
+    implicit request =>
+      if (grn.isValid)
+        Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
+      else InternalServerError
+  }
 }

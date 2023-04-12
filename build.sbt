@@ -1,12 +1,11 @@
 import sbt.Defaults.itSettings
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import play.sbt.routes.RoutesKeys
 
 lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(SbtDistributablesPlugin.publishingSettings)
   .settings(inConfig(IntegrationTest)(itSettings))
   .settings(inThisBuild(buildSettings))
   .settings(
@@ -16,9 +15,12 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    // Import models by default in route files
+    RoutesKeys.routesImport ++= Seq(
+      "uk.gov.hmrc.ctcguaranteebalanceeisstub.models._"
+    )
   )
-  .settings(publishingSettings: _*)
   .settings(scalacSettings)
   .settings(scoverageSettings)
   .configs(IntegrationTest)
@@ -32,14 +34,20 @@ lazy val buildSettings = Def.settings(
   useSuperShell := false
 )
 
+// Scalac options
 lazy val scalacSettings = Def.settings(
-  // Disable warnings arising from generated routing code
-  scalacOptions += "-Wconf:src=routes/.*:silent",
   // Disable fatal warnings and warnings from discarding values
   scalacOptions ~= {
     opts =>
       opts.filterNot(Set("-Xfatal-warnings", "-Ywarn-value-discard"))
-  }
+  },
+  // Disable dead code warning as it is triggered by Mockito any()
+  Test / scalacOptions ~= {
+    opts =>
+      opts.filterNot(Set("-Ywarn-dead-code"))
+  },
+  // Disable warnings arising from generated routing code
+  scalacOptions += "-Wconf:src=routes/.*:s"
 )
 
 lazy val scoverageSettings = Def.settings(

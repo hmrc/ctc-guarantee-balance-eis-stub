@@ -20,13 +20,11 @@ import play.api.libs.json._
 
 case class GuaranteeReferenceNumber(value: String) extends AnyVal {
 
-  def hasValidFormat(): Boolean = value match {
-    case GuaranteeReferenceNumber.grnPattern(_) => true
+  // we consider all GRNs starting with "1" as not found in the DB
+  def isValid: Boolean = value match {
+    case GuaranteeReferenceNumber.grnPattern(_) => !value.startsWith("1")
     case _                                      => false
   }
-
-  // we consider all GRNs starting with "1" as not found in the DB.
-  def isNotFound: Boolean = value.startsWith("1")
 }
 
 object GuaranteeReferenceNumber {

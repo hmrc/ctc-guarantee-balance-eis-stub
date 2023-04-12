@@ -25,7 +25,7 @@ import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 class BalanceResponseSpec extends AnyFreeSpec with Matchers with Generators {
 
   for (balanceResponse <- balanceResponseGenerator.sample) {
-    val expectedJson = Json.obj("GRN" -> balanceResponse.guaranteeReferenceNumber.value, "remainingBalance" -> balanceResponse.remainingBalance.value)
+    val expectedJson = Json.obj("grn" -> balanceResponse.grn.value, "balance" -> balanceResponse.balance.value, "currencyCL" -> balanceResponse.currencyCL)
 
     "BalanceResponse should serialize as expected" in {
       expectedJson.validate[BalanceResponse].get shouldBe balanceResponse

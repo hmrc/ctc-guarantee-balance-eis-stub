@@ -17,10 +17,12 @@
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 
-case class GuaranteeReferenceNumberRequest(GRN: GuaranteeReferenceNumber)
+case class AccessCodeRequest(masterAccessCode: AccessCode) {
+  val isValidAccessCode = masterAccessCode.value == AccessCode.constantAccessCodeValue.value
+}
 
-object GuaranteeReferenceNumberRequest {
-  implicit val format = Json.format[GuaranteeReferenceNumberRequest]
+object AccessCodeRequest {
+  implicit val format = Json.format[AccessCodeRequest]
 }

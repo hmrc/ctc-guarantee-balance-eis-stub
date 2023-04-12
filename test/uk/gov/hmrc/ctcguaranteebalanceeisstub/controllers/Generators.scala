@@ -19,7 +19,7 @@ package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 import org.scalacheck.Gen
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.GuaranteeReferenceNumberRequest
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
@@ -32,11 +32,6 @@ trait Generators {
   val accessCodeResponseGenerator: Gen[AccessCodeResponse] = for {
     grn <- guaranteeReferenceNumberGenerator
   } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)
-
-  val guaranteeReferenceNumberRequestGenerator: Gen[GuaranteeReferenceNumberRequest] =
-    for {
-      grn <- guaranteeReferenceNumberGenerator
-    } yield GuaranteeReferenceNumberRequest(grn)
 
   def guaranteeReferenceNumberGenerator: Gen[GuaranteeReferenceNumber] =
     for {
