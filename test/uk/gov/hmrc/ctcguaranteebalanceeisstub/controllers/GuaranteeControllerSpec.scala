@@ -72,7 +72,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       val request = fakeAccessCodeRequest(Json.toJson(validAccessCodeRequest), routes.GuaranteeController.validateAccessCode(invalidGRN).url)
       val result  = route(app, request).get
 
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      status(result) shouldBe Status.FORBIDDEN
       contentAsJson(result).validate[RequestErrorResponse].map {
         errorResponse =>
           errorResponse.message shouldBe s"Guarantee not found for GRN: ${invalidGRN.value}"
@@ -84,7 +84,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       val request = fakeAccessCodeRequest(Json.toJson("invalid request body"), routes.GuaranteeController.validateAccessCode(invalidGRN).url)
       val result  = route(app, request).get
 
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      status(result) shouldBe Status.FORBIDDEN
     }
 
     "when the access code is invalid, should return 500 with appropriate error message" in {
@@ -92,7 +92,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       val request                              = fakeAccessCodeRequest(Json.toJson(invalidAccessCode), routes.GuaranteeController.validateAccessCode(validGRN).url)
       val result                               = route(app, request).get
 
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      status(result) shouldBe Status.FORBIDDEN
       contentAsJson(result).validate[RequestErrorResponse].map {
         errorResponse =>
           errorResponse.message shouldBe "Not Valid Access Code for this operation"
@@ -129,7 +129,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       val request = fakeBalanceRequest(invalidGRN)
       val result  = route(app, request).get
 
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      status(result) shouldBe Status.FORBIDDEN
     }
 
   }
