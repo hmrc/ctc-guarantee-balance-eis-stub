@@ -44,13 +44,13 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
           .map {
             accessCodeRequest =>
               (grn.isValid, accessCodeRequest.isValidAccessCode) match {
-                case (false, _) => InternalServerError(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
-                case (_, false) => InternalServerError(Json.toJson(RequestErrorResponse.invalidAccessCode))
+                case (false, _) => Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
+                case (_, false) => Forbidden(Json.toJson(RequestErrorResponse.invalidAccessCode))
                 case _          => Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
               }
           }
           .getOrElse(
-            InternalServerError
+            Forbidden
           )
       }
   }
@@ -59,6 +59,6 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
     implicit request =>
       if (grn.isValid)
         Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
-      else InternalServerError
+      else Forbidden
   }
 }
