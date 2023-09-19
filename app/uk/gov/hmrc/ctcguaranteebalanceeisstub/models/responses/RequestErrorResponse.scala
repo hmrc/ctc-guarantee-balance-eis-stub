@@ -37,8 +37,11 @@ object RequestErrorResponse {
       (JsPath \ "timestamp").write[String] and
       (JsPath \ "path").write[String])(unlift(RequestErrorResponse.unapply))
 
-  def invalidAccessCode = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
+  val invalidAccessCode = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
 
   def invalidGrnError(grn: GuaranteeReferenceNumber) =
     RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", "2023-01-24T11:57:36.0537863801", "...")
+
+  val invalidTypeError =
+    RequestErrorResponse("Not Valid Guarantee Type for this operation", "2023-01-24T11:57:36.0537863801", "...")
 }

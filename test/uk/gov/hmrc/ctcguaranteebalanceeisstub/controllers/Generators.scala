@@ -19,23 +19,31 @@ package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 import org.scalacheck.Gen
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
 
 trait Generators {
 
   val balanceResponseGenerator: Gen[BalanceResponse] = for {
-    grn <- guaranteeReferenceNumberGenerator
+    grn <- guaranteeReferenceNumberGenerator()
   } yield BalanceResponse(grn, BalanceResponse.constantBalanceValue)
 
   val accessCodeResponseGenerator: Gen[AccessCodeResponse] = for {
-    grn <- guaranteeReferenceNumberGenerator
+    grn <- guaranteeReferenceNumberGenerator()
   } yield AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)
 
-  def guaranteeReferenceNumberGenerator: Gen[GuaranteeReferenceNumber] =
+  val invalidGrnGenerator: Gen[GuaranteeReferenceNumber] =
+    guaranteeReferenceNumberGenerator(Gen.choose(10, 19).map(_.toString))
+
+  val invalidGrnTypeGenerator: Gen[GuaranteeReferenceNumber] =
+    guaranteeReferenceNumberGenerator(Gen.oneOf("02", "04"))
+
+  val invalidAccessCode: Gen[AccessCode] =
+    Gen.stringOfN(4, Gen.alphaUpperChar).map(AccessCode.apply)
+
+  def guaranteeReferenceNumberGenerator(yearGen: Gen[String] = Gen.choose(23, 39).map(_.toString)): Gen[GuaranteeReferenceNumber] =
     for {
-      year     <- Gen.choose(23, 39).map(_.toString)
+      year     <- yearGen
       country  <- Gen.oneOf("GB", "XI")
       alphanum <- Gen.stringOfN(12, Gen.alphaNumChar).map(_.toUpperCase)
       num1     <- Gen.numChar.map(_.toString)
