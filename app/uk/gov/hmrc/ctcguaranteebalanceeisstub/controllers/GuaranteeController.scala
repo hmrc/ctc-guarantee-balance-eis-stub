@@ -20,7 +20,9 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.Action
+import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
+import play.api.mvc.Result
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
@@ -36,6 +38,15 @@ import scala.concurrent.Future
 @Singleton()
 class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
+  private def validateGrn(grn: GuaranteeReferenceNumber): Either[Result, Unit] =
+    if (grn.value.startsWith("1")) Left(Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn))))
+    else if (grn.value.startsWith("02") || grn.value.startsWith("04")) Left(Forbidden(Json.toJson(RequestErrorResponse.invalidTypeError)))
+    else Right((): Unit)
+
+  private def validateAccessCode(accessCodeRequest: AccessCodeRequest): Either[Result, Unit] =
+    if (accessCodeRequest.masterAccessCode == AccessCode.constantAccessCodeValue) Right((): Unit)
+    else Left(Forbidden(Json.toJson(RequestErrorResponse.invalidAccessCode)))
+
   def validateAccessCode(grn: GuaranteeReferenceNumber): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       Future {
@@ -43,22 +54,21 @@ class GuaranteeController @Inject() (cc: ControllerComponents)(implicit ec: Exec
           .validate[AccessCodeRequest]
           .map {
             accessCodeRequest =>
-              (grn.isValid, accessCodeRequest.isValidAccessCode) match {
-                case (false, _) => Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
-                case (_, false) => Forbidden(Json.toJson(RequestErrorResponse.invalidAccessCode))
-                case _          => Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
-              }
+              for {
+                _ <- validateGrn(grn)
+                _ <- validateAccessCode(accessCodeRequest)
+              } yield Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
           }
+          .map(_.fold(x => x, x => x))
           .getOrElse(
             Forbidden
           )
       }
   }
 
-  def getBalance(grn: GuaranteeReferenceNumber) = Action {
-    implicit request =>
-      if (grn.isValid)
-        Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
-      else Forbidden
+  def getBalance(grn: GuaranteeReferenceNumber): Action[AnyContent] = Action {
+    if (validateGrn(grn).isRight)
+      Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
+    else Forbidden
   }
 }

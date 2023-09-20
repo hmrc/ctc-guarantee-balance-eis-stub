@@ -18,14 +18,7 @@ package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
 import play.api.libs.json._
 
-case class GuaranteeReferenceNumber(value: String) extends AnyVal {
-
-  // we consider all GRNs starting with "1" as not found in the DB
-  def isValid: Boolean = value match {
-    case GuaranteeReferenceNumber.grnPattern(_) => !value.startsWith("1")
-    case _                                      => false
-  }
-}
+case class GuaranteeReferenceNumber(value: String) extends AnyVal
 
 object GuaranteeReferenceNumber {
   val grnPattern = """[0-9]{2}[A-Z]{2}[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?""".r
