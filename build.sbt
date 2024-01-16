@@ -1,16 +1,12 @@
-import sbt.Defaults.itSettings
 import scoverage.ScoverageKeys
-//import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.12"
 
 lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(inConfig(IntegrationTest)(itSettings))
   .settings(inThisBuild(buildSettings))
   .settings(
     PlayKeys.playDefaultPort := 9518,
@@ -31,7 +27,6 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
 lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
-  .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.test)
 
 // Settings for the whole build
