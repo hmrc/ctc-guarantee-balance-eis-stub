@@ -1,16 +1,14 @@
-import sbt.Defaults.itSettings
 import scoverage.ScoverageKeys
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import play.sbt.routes.RoutesKeys
 
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
+
 lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(inConfig(IntegrationTest)(itSettings))
   .settings(inThisBuild(buildSettings))
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.8",
     PlayKeys.playDefaultPort := 9518,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
@@ -23,10 +21,13 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   )
   .settings(scalacSettings)
   .settings(scoverageSettings)
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(libraryDependencies ++= AppDependencies.test)
 
 // Settings for the whole build
 lazy val buildSettings = Def.settings(
