@@ -17,7 +17,6 @@
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.functional.syntax.unlift
 import play.api.libs.json.JsPath
 import play.api.libs.json.OWrites
 import play.api.libs.json.Reads
@@ -30,18 +29,20 @@ object RequestErrorResponse {
   implicit val reads: Reads[RequestErrorResponse] =
     ((JsPath \ "message").read[String] and
       (JsPath \ "timestamp").read[String] and
-      (JsPath \ "path").read[String])(RequestErrorResponse.apply _)
+      (JsPath \ "path").read[String])(RequestErrorResponse.apply)
 
   implicit val writes: OWrites[RequestErrorResponse] =
     ((JsPath \ "message").write[String] and
       (JsPath \ "timestamp").write[String] and
-      (JsPath \ "path").write[String])(unlift(RequestErrorResponse.unapply))
+      (JsPath \ "path").write[String])(
+      v => (v.message, v.timestamp, v.path)
+    )
 
-  val invalidAccessCode = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
+  val invalidAccessCode: RequestErrorResponse = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
 
-  def invalidGrnError(grn: GuaranteeReferenceNumber) =
+  def invalidGrnError(grn: GuaranteeReferenceNumber): RequestErrorResponse =
     RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", "2023-01-24T11:57:36.0537863801", "...")
 
-  val invalidTypeError =
+  val invalidTypeError: RequestErrorResponse =
     RequestErrorResponse("Not Valid Guarantee Type for this operation", "2023-01-24T11:57:36.0537863801", "...")
 }
