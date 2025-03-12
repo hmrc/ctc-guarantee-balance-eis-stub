@@ -2,7 +2,7 @@ import scoverage.ScoverageKeys
 import play.sbt.routes.RoutesKeys
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "3.6.4"
 
 lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)

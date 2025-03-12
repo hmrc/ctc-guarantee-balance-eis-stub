@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
+import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 case class AccessCode(value: String) extends AnyVal
 
 object AccessCode {
-  implicit val accessCodeFormat = Json.valueFormat[AccessCode]
+  implicit val accessCodeFormat: Format[AccessCode] = Json.valueFormat[AccessCode]
 
-  val constantAccessCodeValue = AccessCode("AB12")
+  val constantAccessCodeValue: AccessCode = AccessCode("AB12")
 }

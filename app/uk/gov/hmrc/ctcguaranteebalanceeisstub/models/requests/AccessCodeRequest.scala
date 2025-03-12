@@ -17,10 +17,11 @@
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests
 
 import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
 
 case class AccessCodeRequest(masterAccessCode: AccessCode)
 
 object AccessCodeRequest {
-  implicit val format = Json.format[AccessCodeRequest]
+  implicit val format: OFormat[AccessCodeRequest] = Json.format[AccessCodeRequest]
 }
