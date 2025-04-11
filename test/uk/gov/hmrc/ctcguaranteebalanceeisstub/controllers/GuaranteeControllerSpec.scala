@@ -21,10 +21,11 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.Application
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.FakeHeaders
 import play.api.test.FakeRequest
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
@@ -48,7 +49,9 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
     body = body
   )
 
-  override lazy val app = GuiceApplicationBuilder().build()
+  override lazy val app = GuiceApplicationBuilder()
+    .configure("metrics.enabled" -> false)
+    .build()
 
   "POST /guarantees/:grn/access-codes" - {
     val validAccessCodeRequest: AccessCodeRequest = AccessCodeRequest(AccessCode.constantAccessCodeValue)
@@ -127,7 +130,12 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
     body = AnyContentAsEmpty
   )
 
-  "GET /guarantees/:grn/balance" - {
+  "getBalance endpoint" - {
+
+    lazy val app = GuiceApplicationBuilder()
+      .configure("metrics.enabled" -> false, "features.TestScenarios.enabled" -> false)
+      .build()
+
     "when the GRN format is valid, should return 200 with GRN and remainingBalance" in forAll(guaranteeReferenceNumberGenerator()) {
       grn =>
         val request = fakeBalanceRequest(grn)
@@ -149,5 +157,107 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
         status(result) shouldBe Status.FORBIDDEN
     }
 
+  }
+
+  "when TestScenario is ON" - {
+
+    val configuredApp = GuiceApplicationBuilder()
+      .configure("features.TestScenarios.enabled" -> true, "metrics.enabled" -> false)
+      .build()
+
+    val gbType0Grn = GuaranteeReferenceNumber("23GB0000010000854")
+    val gbType1Grn = GuaranteeReferenceNumber("23GB0000010000863")
+    val gbType9Grn = GuaranteeReferenceNumber("23GB0000010000872")
+    val xiType0Grn = GuaranteeReferenceNumber("23XI0000010000655")
+    val xiType1Grn = GuaranteeReferenceNumber("23XI0000010000664")
+    val unknownGrn = GuaranteeReferenceNumber("99XX987654321098B2")
+
+    "should return 200 OK with correct balance for GB Type 1 GRN" in {
+      val request = fakeBalanceRequest(gbType1Grn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.OK
+      contentAsJson(result)
+        .validate[BalanceResponse]
+        .map {
+          response =>
+            response.grn shouldBe gbType1Grn
+            response.balance.value shouldBe BigDecimal("10000").doubleValue
+            response.currencyCL shouldBe "GBP"
+        }
+        .get
+    }
+
+    "should return 200 OK with correct balance for XI Type 1 GRN" in {
+      val request = fakeBalanceRequest(xiType1Grn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.OK
+      contentAsJson(result)
+        .validate[BalanceResponse]
+        .map {
+          response =>
+            response.grn shouldBe xiType1Grn
+            response.balance.value shouldBe BigDecimal("50000").doubleValue
+            response.currencyCL shouldBe "GBP"
+        }
+        .get
+    }
+
+    "should return 403 Forbidden (Invalid Type) for GB Type 0 GRN" in {
+      val request = fakeBalanceRequest(gbType0Grn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.FORBIDDEN
+      contentAsJson(result)
+        .validate[RequestErrorResponse]
+        .map {
+          errorResponse =>
+            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
+        }
+        .get
+    }
+
+    "should return 403 Forbidden (Invalid Type) for GB Type 9 GRN" in {
+      val request = fakeBalanceRequest(gbType9Grn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.FORBIDDEN
+      contentAsJson(result)
+        .validate[RequestErrorResponse]
+        .map {
+          errorResponse =>
+            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
+        }
+        .get
+    }
+
+    "should return 403 Forbidden (Invalid Type) for XI Type 0 GRN" in {
+      val request = fakeBalanceRequest(xiType0Grn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.FORBIDDEN
+      contentAsJson(result)
+        .validate[RequestErrorResponse]
+        .map {
+          errorResponse =>
+            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
+        }
+        .get
+    }
+
+    "should return 404 Not Found for a GRN not present in the test data" in {
+      val request = fakeBalanceRequest(unknownGrn)
+      val result  = route(configuredApp, request).get
+
+      status(result) shouldBe Status.NOT_FOUND
+      contentAsJson(result)
+        .validate[RequestErrorResponse]
+        .map {
+          errorResponse =>
+            errorResponse.message shouldBe s"Guarantee not found for GRN: ${unknownGrn.value}"
+        }
+        .get
+    }
   }
 }

@@ -26,6 +26,9 @@ case class RequestErrorResponse(message: String, timestamp: String, path: String
 
 object RequestErrorResponse {
 
+  private val Timestamp = "2023-01-24T11:57:36.0537863801"
+  private val Path      = "..."
+
   implicit val reads: Reads[RequestErrorResponse] =
     ((JsPath \ "message").read[String] and
       (JsPath \ "timestamp").read[String] and
@@ -38,11 +41,12 @@ object RequestErrorResponse {
       v => (v.message, v.timestamp, v.path)
     )
 
-  val invalidAccessCode: RequestErrorResponse = RequestErrorResponse("Not Valid Access Code for this operation", "2023-01-24T11:57:36.0537863801", "...")
+  val invalidAccessCode: RequestErrorResponse =
+    RequestErrorResponse("Not Valid Access Code for this operation", Timestamp, Path)
 
   def invalidGrnError(grn: GuaranteeReferenceNumber): RequestErrorResponse =
-    RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", "2023-01-24T11:57:36.0537863801", "...")
+    RequestErrorResponse(s"Guarantee not found for GRN: ${grn.value}", Timestamp, Path)
 
   val invalidTypeError: RequestErrorResponse =
-    RequestErrorResponse("Not Valid Guarantee Type for this operation", "2023-01-24T11:57:36.0537863801", "...")
+    RequestErrorResponse("Not Valid Guarantee Type for this operation", Timestamp, Path)
 }
