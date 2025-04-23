@@ -16,94 +16,58 @@
 
 package uk.gov.hmrc.ctcguaranteebalanceeisstub.controllers
 
-import play.api.libs.json.JsValue
-import play.api.libs.json.Json
-import play.api.mvc.Action
-import play.api.mvc.AnyContent
-import play.api.mvc.ControllerComponents
-import play.api.mvc.Result
+import play.api.libs.json.*
+import play.api.mvc.*
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.config.AppConfig
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.TestScenarios
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.{AccessCodeResponse, BalanceResponse, RequestErrorResponse}
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.{AccessCode, GuaranteeReferenceNumber, TestScenarios}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
 
 @Singleton()
 class GuaranteeController @Inject() (
   cc: ControllerComponents,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+) extends BackendController(cc) {
 
-  private def validateGrn(grn: GuaranteeReferenceNumber): Either[Result, Unit] =
-    if (grn.value.startsWith("1")) Left(Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn))))
-    else if (grn.value.startsWith("02") || grn.value.startsWith("04")) Left(Forbidden(Json.toJson(RequestErrorResponse.invalidTypeError)))
-    else Right((): Unit)
-
-  private def originalValidateAccessCode(accessCodeRequest: AccessCodeRequest): Either[Result, Unit] =
-    if (accessCodeRequest.masterAccessCode == AccessCode.constantAccessCodeValue) Right((): Unit)
-    else Left(Forbidden(Json.toJson(RequestErrorResponse.invalidAccessCode)))
-
-  def validateAccessCode(grn: GuaranteeReferenceNumber): Action[JsValue] = Action.async(parse.json) {
+  def validateAccessCode(grn: GuaranteeReferenceNumber): Action[JsValue] = Action(parse.json) {
     implicit request =>
-      Future {
-        if (appConfig.TestScenariosEnabled) {
-          request.body
-            .validate[AccessCodeRequest]
-            .map {
-              accessCodeRequest =>
-                TestScenarios.getAccessCodeValidationScenarios(grn, accessCodeRequest.masterAccessCode)
-            }
-            .getOrElse {
-              val timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-              BadRequest(Json.toJson(RequestErrorResponse("Invalid request payload", timestamp, request.path)))
-            }
-        } else {
-          request.body
-            .validate[AccessCodeRequest]
-            .map {
-              accessCodeRequest =>
-                for {
-                  _ <- validateGrn(grn)
-                  _ <- originalValidateAccessCode(accessCodeRequest)
-                } yield Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
-            }
-            .map(_.fold(identity, identity))
-            .getOrElse {
-              val timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-              BadRequest(Json.toJson(RequestErrorResponse("Invalid request payload", timestamp, request.path)))
+      request.body
+        .validate[AccessCodeRequest]
+        .map {
+          accessCodeRequest =>
+            if (appConfig.TestScenariosEnabled) {
+              TestScenarios.getAccessCodeValidationScenarios(grn, accessCodeRequest.masterAccessCode)
+            } else {
+              validateAndRespond(grn, Some(accessCodeRequest)) {
+                Ok(Json.toJson(AccessCodeResponse(grn, accessCodeRequest.masterAccessCode)))
+              }
             }
         }
-      }
+        .getOrElse(invalidJsonFormat())
   }
 
   def getBalance(grn: GuaranteeReferenceNumber): Action[AnyContent] = Action {
-    implicit request =>
-      if (appConfig.TestScenariosEnabled) {
-        TestScenarios
-          .getBalanceResponse(grn)
-          .fold(
-            errorResult => errorResult,
-            balanceResponse => Ok(Json.toJson(balanceResponse))
-          )
-      } else {
-        validateGrn(grn) match {
-          case Right(_) =>
-            Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
-          case Left(errorResult) =>
-            errorResult
-        }
+    if (appConfig.TestScenariosEnabled) { TestScenarios.getBalanceResponse(grn) }
+    else {
+      validateAndRespond(grn) {
+        Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
       }
+    }
   }
+
+  private def validateAndRespond(grn: GuaranteeReferenceNumber, accessCodeRequest: Option[AccessCodeRequest] = None)(onSuccess: => Result) =
+    (grn, accessCodeRequest.map(_.masterAccessCode)) match {
+      case (grn, _) if grn.value.startsWith("1")                                     => Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
+      case (grn, _) if grn.value.startsWith("02") || grn.value.startsWith("04")      => Forbidden(Json.toJson(RequestErrorResponse.invalidTypeError))
+      case (_, Some(accessCode)) if accessCode != AccessCode.constantAccessCodeValue => Forbidden(Json.toJson(RequestErrorResponse.invalidAccessCode))
+      case _                                                                         => onSuccess
+    }
+
+  private def invalidJsonFormat()(implicit request: Request[JsValue]) =
+    BadRequest(Json.toJson(RequestErrorResponse("Invalid request payload", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), request.path)))
 }

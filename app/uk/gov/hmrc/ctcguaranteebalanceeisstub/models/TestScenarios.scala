@@ -18,11 +18,8 @@ package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
 import play.api.libs.json.Json
 import play.api.mvc.Result
-import play.api.mvc.Results._
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.Balance
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
+import play.api.mvc.Results.*
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.{AccessCodeResponse, Balance, BalanceResponse, RequestErrorResponse}
 
 object TestScenarios {
 
@@ -47,14 +44,14 @@ object TestScenarios {
 
   private val invalidBalanceCheckTypes: Set[Int] = Set(0, 2, 4, 9)
 
-  def getBalanceResponse(grn: GuaranteeReferenceNumber): Either[Result, BalanceResponse] =
+  def getBalanceResponse(grn: GuaranteeReferenceNumber): Result =
     simpleGuaranteeTestDataList.find(_.grn == grn) match {
       case None =>
-        Left(guaranteeNotFoundResult(grn))
+        guaranteeNotFoundResult(grn)
       case Some(data) if invalidBalanceCheckTypes.contains(data.guaranteeType) =>
-        Left(invalidGuaranteeTypeResult)
+        invalidGuaranteeTypeResult
       case Some(data) =>
-        Right(BalanceResponse(data.grn, Balance(data.amount.doubleValue), data.currency))
+        Ok(Json.toJson(BalanceResponse(data.grn, Balance(data.amount.doubleValue), data.currency)))
     }
 
   def getAccessCodeValidationScenarios(grn: GuaranteeReferenceNumber, providedCode: AccessCode): Result =
