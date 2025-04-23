@@ -35,8 +35,6 @@ object TestScenarios {
   private val invalidGuaranteeTypeResult: Result =
     Forbidden(Json.toJson(RequestErrorResponse.invalidTypeError))
 
-
-
   private val simpleGuaranteeTestDataList: List[TestData] = List(
     // GB data
     TestData(0, GuaranteeReferenceNumber("23GB0000010000854"), BigDecimal("262626"), "GBP", "AC01"),
@@ -59,7 +57,7 @@ object TestScenarios {
         Right(BalanceResponse(data.grn, Balance(data.amount.doubleValue), data.currency))
     }
 
-  def getAccessCodeValidationScenarios(grn: GuaranteeReferenceNumber, providedCode: AccessCode): Result = {
+  def getAccessCodeValidationScenarios(grn: GuaranteeReferenceNumber, providedCode: AccessCode): Result =
     simpleGuaranteeTestDataList.find(_.grn == grn) match {
       case None =>
         guaranteeNotFoundResult(grn)
@@ -71,8 +69,6 @@ object TestScenarios {
           invalidAccessCodeResult
         }
     }
-  }
-
 
   def handleUnknownTraderTestGrn(grn: GuaranteeReferenceNumber): Result =
     guaranteeNotFoundResult(grn)

@@ -101,7 +101,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
         val request = fakeAccessCodeRequest(Json.toJson("invalid request body"), routes.GuaranteeController.validateAccessCode(grn).url)
         val result  = route(app, request).get
 
-        status(result) shouldBe Status.FORBIDDEN
+        status(result) shouldBe Status.BAD_REQUEST
     }
 
     "when the access code is invalid, should return 403 with appropriate error message" in forAll(guaranteeReferenceNumberGenerator(), invalidAccessCode) {

@@ -61,8 +61,9 @@ class GuaranteeController @Inject() (
         if (appConfig.TestScenariosEnabled) {
           request.body
             .validate[AccessCodeRequest]
-            .map { accessCodeRequest =>
-              TestScenarios.getAccessCodeValidationScenarios(grn, accessCodeRequest.masterAccessCode)
+            .map {
+              accessCodeRequest =>
+                TestScenarios.getAccessCodeValidationScenarios(grn, accessCodeRequest.masterAccessCode)
             }
             .getOrElse {
               val timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
@@ -71,11 +72,12 @@ class GuaranteeController @Inject() (
         } else {
           request.body
             .validate[AccessCodeRequest]
-            .map { accessCodeRequest =>
-              for {
-                _ <- validateGrn(grn)
-                _ <- originalValidateAccessCode(accessCodeRequest)
-              } yield Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
+            .map {
+              accessCodeRequest =>
+                for {
+                  _ <- validateGrn(grn)
+                  _ <- originalValidateAccessCode(accessCodeRequest)
+                } yield Ok(Json.toJson(AccessCodeResponse(grn, AccessCode.constantAccessCodeValue)))
             }
             .map(_.fold(identity, identity))
             .getOrElse {
@@ -89,10 +91,12 @@ class GuaranteeController @Inject() (
   def getBalance(grn: GuaranteeReferenceNumber): Action[AnyContent] = Action {
     implicit request =>
       if (appConfig.TestScenariosEnabled) {
-        TestScenarios.getBalanceResponse(grn).fold(
-          errorResult => errorResult,
-          balanceResponse => Ok(Json.toJson(balanceResponse))
-        )
+        TestScenarios
+          .getBalanceResponse(grn)
+          .fold(
+            errorResult => errorResult,
+            balanceResponse => Ok(Json.toJson(balanceResponse))
+          )
       } else {
         validateGrn(grn) match {
           case Right(_) =>
