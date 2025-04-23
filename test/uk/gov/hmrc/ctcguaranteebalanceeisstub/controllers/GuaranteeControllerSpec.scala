@@ -53,6 +53,59 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
     .configure("metrics.enabled" -> false)
     .build()
 
+  lazy val appFlagOff: Application = GuiceApplicationBuilder()
+    .configure(
+      "features.trader-test-behaviour.enabled" -> false,
+      "metrics.enabled"                        -> false
+    )
+    .build()
+
+  lazy val appFlagOn: Application = GuiceApplicationBuilder()
+    .configure(
+      "features.trader-test-behaviour.enabled" -> true,
+      "metrics.enabled"                        -> false
+    )
+    .build()
+
+
+  "validateAccessCode endpoint" - {
+
+    "when trader test behaviour is OFF" - {
+      val originalValidAccessCodeReq = AccessCodeRequest(AccessCode.constantAccessCodeValue)
+
+      "when the GRN format is valid (original logic), should return 200 with GRN and constant accessCode" in forAll(guaranteeReferenceNumberGenerator()) {
+        grn =>
+          assume(!grn.value.startsWith("1") && !grn.value.startsWith("02") && !grn.value.startsWith("04"))
+          val request = fakeAccessCodeRequest(Json.toJson(originalValidAccessCodeReq), routes.GuaranteeController.validateAccessCode(grn).url)
+          val result  = route(appFlagOff, request).get
+
+          status(result) shouldBe Status.OK
+          contentAsJson(result)
+            .validate[AccessCodeResponse]
+            .map {
+              response =>
+                response.grn.value shouldBe grn.value
+                response.masterAccessCode shouldBe AccessCode.constantAccessCodeValue
+            }
+            .get
+      }
+
+      "when the GRN starts with original logic, should return 403 with error message" in forAll(invalidGrnGenerator) {
+        grn =>
+          val request = fakeAccessCodeRequest(Json.toJson(originalValidAccessCodeReq), routes.GuaranteeController.validateAccessCode(grn).url)
+          val result  = route(appFlagOff, request).get
+
+          status(result) shouldBe Status.FORBIDDEN
+          contentAsJson(result)
+            .validate[RequestErrorResponse]
+            .map {
+              errorResponse =>
+                errorResponse.message shouldBe s"Guarantee not found for GRN: ${grn.value}"
+            }
+            .get
+      }
+    }
+  }
   "POST /guarantees/:grn/access-codes" - {
     val validAccessCodeRequest: AccessCodeRequest = AccessCodeRequest(AccessCode.constantAccessCodeValue)
 
@@ -131,10 +184,6 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
   )
 
   "getBalance endpoint" - {
-
-    lazy val app = GuiceApplicationBuilder()
-      .configure("metrics.enabled" -> false, "features.TestScenarios.enabled" -> false)
-      .build()
 
     "when the GRN format is valid, should return 200 with GRN and remainingBalance" in forAll(guaranteeReferenceNumberGenerator()) {
       grn =>
