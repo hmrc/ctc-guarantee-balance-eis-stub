@@ -55,18 +55,17 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
 
   lazy val appFlagOff: Application = GuiceApplicationBuilder()
     .configure(
-      "features.trader-test-behaviour.enabled" -> false,
-      "metrics.enabled"                        -> false
+      "features.TestScenarios.enabled" -> false,
+      "metrics.enabled"                -> false
     )
     .build()
 
   lazy val appFlagOn: Application = GuiceApplicationBuilder()
     .configure(
-      "features.trader-test-behaviour.enabled" -> true,
-      "metrics.enabled"                        -> false
+      "features.TestScenarios.enabled" -> true,
+      "metrics.enabled"                -> false
     )
     .build()
-
 
   "validateAccessCode endpoint" - {
 
@@ -103,6 +102,42 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
                 errorResponse.message shouldBe s"Guarantee not found for GRN: ${grn.value}"
             }
             .get
+      }
+    }
+
+    "when trader test behaviour is ON" - {
+      val originalValidAccessCodeReq = AccessCodeRequest(AccessCode("AC01"))
+
+      "when the GRN format is valid, should return 200 with GRN and constant accessCode" in {
+        val grn     = GuaranteeReferenceNumber("23GB0000010000854")
+        val request = fakeAccessCodeRequest(Json.toJson(originalValidAccessCodeReq), routes.GuaranteeController.validateAccessCode(grn).url)
+        val result  = route(appFlagOn, request).get
+
+        status(result) shouldBe Status.OK
+        contentAsJson(result)
+          .validate[AccessCodeResponse]
+          .map {
+            response =>
+              response.grn.value shouldBe grn.value
+              response.masterAccessCode shouldBe AccessCode("AC01")
+          }
+          .get
+      }
+
+      "when the GRN format is valid, should return 400" in {
+        val grn     = GuaranteeReferenceNumber("23GB0000010000854")
+        val request = fakeAccessCodeRequest(Json.toJson("Invalid"), routes.GuaranteeController.validateAccessCode(grn).url)
+        val result  = route(appFlagOn, request).get
+
+        status(result) shouldBe Status.BAD_REQUEST
+
+        contentAsJson(result)
+          .validate[RequestErrorResponse]
+          .map {
+            response =>
+              response.message shouldBe "Invalid request payload"
+              response.path shouldBe "/ctc-guarantee-balance-eis-stub/guarantees/23GB0000010000854/access-codes"
+          }
       }
     }
   }
