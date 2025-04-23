@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ctcguaranteebalanceeisstub.config
+package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import play.api.Configuration
-
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
-
-  val appName: String               = config.get[String]("appName")
-  val TestScenariosEnabled: Boolean = config.get[Boolean]("features.TestScenarios.enabled")
-}
+case class TestData(
+  guaranteeType: Int,
+  grn: GuaranteeReferenceNumber,
+  amount: BigDecimal,
+  currency: String,
+  accessCode: String
+)
