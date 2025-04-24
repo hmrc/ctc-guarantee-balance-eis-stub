@@ -18,12 +18,8 @@ package uk.gov.hmrc.ctcguaranteebalanceeisstub.models
 
 import play.api.libs.json.*
 
-import scala.util.matching.Regex
-
 case class GuaranteeReferenceNumber(value: String) extends AnyVal
 
 object GuaranteeReferenceNumber {
-  val grnPattern: Regex = """[0-9]{2}[A-Z]{2}[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?""".r
-
   implicit val grnFormat: Format[GuaranteeReferenceNumber] = Json.valueFormat[GuaranteeReferenceNumber]
 }

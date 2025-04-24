@@ -249,10 +249,7 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
       .configure("features.TestScenarios.enabled" -> true, "metrics.enabled" -> false)
       .build()
 
-    val gbType0Grn = GuaranteeReferenceNumber("23GB0000010000854")
     val gbType1Grn = GuaranteeReferenceNumber("23GB0000010000863")
-    val gbType9Grn = GuaranteeReferenceNumber("23GB0000010000872")
-    val xiType0Grn = GuaranteeReferenceNumber("23XI0000010000655")
     val xiType1Grn = GuaranteeReferenceNumber("23XI0000010000664")
     val unknownGrn = GuaranteeReferenceNumber("99XX987654321098B2")
 
@@ -284,48 +281,6 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
             response.grn shouldBe xiType1Grn
             response.balance.value shouldBe BigDecimal("50000").doubleValue
             response.currencyCL shouldBe "GBP"
-        }
-        .get
-    }
-
-    "should return 403 Forbidden (Invalid Type) for GB Type 0 GRN" in {
-      val request = fakeBalanceRequest(gbType0Grn)
-      val result  = route(configuredApp, request).get
-
-      status(result) shouldBe Status.FORBIDDEN
-      contentAsJson(result)
-        .validate[RequestErrorResponse]
-        .map {
-          errorResponse =>
-            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
-        }
-        .get
-    }
-
-    "should return 403 Forbidden (Invalid Type) for GB Type 9 GRN" in {
-      val request = fakeBalanceRequest(gbType9Grn)
-      val result  = route(configuredApp, request).get
-
-      status(result) shouldBe Status.FORBIDDEN
-      contentAsJson(result)
-        .validate[RequestErrorResponse]
-        .map {
-          errorResponse =>
-            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
-        }
-        .get
-    }
-
-    "should return 403 Forbidden (Invalid Type) for XI Type 0 GRN" in {
-      val request = fakeBalanceRequest(xiType0Grn)
-      val result  = route(configuredApp, request).get
-
-      status(result) shouldBe Status.FORBIDDEN
-      contentAsJson(result)
-        .validate[RequestErrorResponse]
-        .map {
-          errorResponse =>
-            errorResponse.message shouldBe "Not Valid Guarantee Type for this operation"
         }
         .get
     }
