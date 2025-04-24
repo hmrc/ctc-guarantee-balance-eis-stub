@@ -20,13 +20,18 @@ import play.api.libs.json.*
 import play.api.mvc.*
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.config.AppConfig
 import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.requests.AccessCodeRequest
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.{AccessCodeResponse, BalanceResponse, RequestErrorResponse}
-import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.{AccessCode, GuaranteeReferenceNumber, TestScenarios}
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.AccessCodeResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.BalanceResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.responses.RequestErrorResponse
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.AccessCode
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.GuaranteeReferenceNumber
+import uk.gov.hmrc.ctcguaranteebalanceeisstub.models.TestScenarios
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton()
 class GuaranteeController @Inject() (
@@ -40,7 +45,7 @@ class GuaranteeController @Inject() (
         .validate[AccessCodeRequest]
         .map {
           accessCodeRequest =>
-            if (appConfig.TestScenariosEnabled) {
+            if (appConfig.testScenariosFeatureEnabled) {
               TestScenarios.getAccessCodeValidationScenarios(grn, accessCodeRequest.masterAccessCode)
             } else {
               validateAndRespond(grn, Some(accessCodeRequest)) {
@@ -52,7 +57,7 @@ class GuaranteeController @Inject() (
   }
 
   def getBalance(grn: GuaranteeReferenceNumber): Action[AnyContent] = Action {
-    if (appConfig.TestScenariosEnabled) { TestScenarios.getBalanceResponse(grn) }
+    if (appConfig.testScenariosFeatureEnabled) { TestScenarios.getBalanceResponse(grn) }
     else {
       validateAndRespond(grn) {
         Ok(Json.toJson(BalanceResponse(grn, BalanceResponse.constantBalanceValue)))
