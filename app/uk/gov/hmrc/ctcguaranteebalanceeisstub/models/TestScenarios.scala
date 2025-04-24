@@ -51,5 +51,5 @@ object TestScenarios {
     }
 
   private def guaranteeNotFoundResult(grn: GuaranteeReferenceNumber): Result =
-    NotFound(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
+    Forbidden(Json.toJson(RequestErrorResponse.invalidGrnError(grn)))
 }

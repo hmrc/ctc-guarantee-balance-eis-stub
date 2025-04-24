@@ -285,11 +285,11 @@ class GuaranteeControllerSpec extends AnyFreeSpec with GuiceOneAppPerSuite with 
         .get
     }
 
-    "should return 404 Not Found for a GRN not present in the test data" in {
+    "should return 403 Not Found for a GRN not present in the test data" in {
       val request = fakeBalanceRequest(unknownGrn)
       val result  = route(configuredApp, request).get
 
-      status(result) shouldBe Status.NOT_FOUND
+      status(result) shouldBe Status.FORBIDDEN
       contentAsJson(result)
         .validate[RequestErrorResponse]
         .map {
