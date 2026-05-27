@@ -32,8 +32,8 @@ object TestScenarios {
     TestData(9, GuaranteeReferenceNumber("23GB0000010000872"), BigDecimal("90000"), "GBP", "AC01"),
     TestData(0, GuaranteeReferenceNumber("23XI0000010000655"), BigDecimal("30000"), "GBP", "AC01"),
     TestData(1, GuaranteeReferenceNumber("23XI0000010000664"), BigDecimal("50000"), "GBP", "AC01"),
-    TestData(1, GuaranteeReferenceNumber("26GB000001038B634"), BigDecimal("10"), "GBP", "AC01"),
-    TestData(1, GuaranteeReferenceNumber("26XI0000010943D40"), BigDecimal("10"), "GBP", "AC01")
+    TestData(1, GuaranteeReferenceNumber("26GB000001038B634"), BigDecimal("50000"), "GBP", "AC01"),
+    TestData(1, GuaranteeReferenceNumber("26XI0000010943D40"), BigDecimal("45000"), "GBP", "AC01")
   )
 
   def getBalanceResponse(grn: GuaranteeReferenceNumber): Result =
