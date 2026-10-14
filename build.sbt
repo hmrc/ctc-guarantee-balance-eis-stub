@@ -21,7 +21,6 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   )
   .settings(scalacSettings)
   .settings(scoverageSettings)
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
 
 lazy val it = project
