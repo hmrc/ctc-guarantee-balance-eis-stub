@@ -21,7 +21,7 @@ lazy val microservice = Project("ctc-guarantee-balance-eis-stub", file("."))
   )
   .settings(scalacSettings)
   .settings(scoverageSettings)
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefacts.tax.service.gov.uk/maven2"))
   .settings(CodeCoverageSettings.settings: _*)
 
 lazy val it = project
